@@ -1,0 +1,139 @@
+Table users {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  email varchar(255) [not null, unique]
+  password varchar(255) [not null]
+  phone varchar(20)
+  role varchar(30) [not null]
+  address varchar(255)
+  created_at datetime [not null]
+  updated_at datetime [not null]
+}
+
+Table stores {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  description text
+  address varchar(255) [not null]
+  phone varchar(20)
+  status varchar(30) [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+}
+
+Table categories {
+  id bigint [pk, increment]
+  store_id bigint [not null]
+  name varchar(100) [not null]
+  sort_order int [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime
+}
+
+Table products {
+  id bigint [pk, increment]
+  store_id bigint [not null]
+  category_id bigint [not null]
+  name varchar(100) [not null]
+  description text
+  price decimal(10,2) [not null]
+  image_url varchar(500)
+  status varchar(30) [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime
+}
+
+Table carts {
+  id bigint [pk, increment]
+  user_id bigint [not null, unique]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+}
+
+Table cart_items {
+  id bigint [pk, increment]
+  cart_id bigint [not null]
+  product_id bigint [not null]
+  quantity int [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+
+  Indexes {
+    (cart_id, product_id) [unique]
+  }
+}
+
+Table order_groups {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  total_amount decimal(10,2) [not null]
+  created_at datetime [not null]
+
+  Indexes {
+    user_id
+  }
+}
+
+Table orders {
+  id bigint [pk, increment]
+  order_group_id bigint [not null]
+  store_id bigint [not null]
+  status varchar(30) [not null]
+  total_amount decimal(10,2) [not null]
+  delivery_postal_code varchar(10) [not null]
+  delivery_address varchar(255) [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+
+  Indexes {
+    order_group_id
+    store_id
+  }
+}
+
+Table order_items {
+  id bigint [pk, increment]
+  order_id bigint [not null]
+  product_id bigint [not null]
+  product_name varchar(100) [not null]
+  unit_price decimal(10,2) [not null]
+  quantity int [not null]
+  subtotal decimal(10,2) [not null]
+  created_at datetime [not null]
+
+  Indexes {
+    order_id
+    product_id
+  }
+}
+
+Table deliveries {
+  id bigint [pk, increment]
+  order_id bigint [not null, unique]
+  delivery_staff_id bigint [not null]
+  status varchar(30) [not null]
+  started_at datetime
+  completed_at datetime
+  created_at datetime [not null]
+  updated_at datetime [not null]
+
+  Indexes {
+    delivery_staff_id
+  }
+}
+
+Ref: users.id - carts.user_id
+Ref: users.id < order_groups.user_id
+Ref: users.id < deliveries.delivery_staff_id
+Ref: stores.id < categories.store_id
+Ref: stores.id < products.store_id
+Ref: categories.id < products.category_id
+Ref: carts.id < cart_items.cart_id
+Ref: products.id < cart_items.product_id
+Ref: order_groups.id < orders.order_group_id
+Ref: stores.id < orders.store_id
+Ref: orders.id < order_items.order_id
+Ref: products.id < order_items.product_id
+Ref: orders.id - deliveries.order_id
