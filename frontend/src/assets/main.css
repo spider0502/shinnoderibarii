@@ -1,0 +1,68 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, "Noto Sans JP", "Yu Gothic", sans-serif;
+    color: #303133;
+    background: #f5f7fa;
+}
+
+.layout {
+    min-height: 100vh;
+}
+
+.sidebar {
+    background: #1f2937;
+    color: #fff;
+}
+
+.brand {
+    padding: 24px 18px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.side-menu {
+    border-right: none;
+    background: transparent;
+}
+
+.side-menu .el-menu-item {
+    color: #d1d5db;
+}
+
+.side-menu .el-menu-item:hover,
+.side-menu .el-menu-item.is-active {
+    color: #fff;
+    background: #374151;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-bottom: 1px solid #ebeef5;
+}
+
+.content {
+    padding: 28px;
+}
+
+.content h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+}
+
+.subtitle,
+.endpoint {
+    color: #909399;
+    font-size: 14px;
+}
+
+.error {
+    color: #f56c6c;
+}
