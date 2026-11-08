@@ -1,178 +1,160 @@
-
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { Odometer, User } from '@element-plus/icons-vue'
-import axios from 'axios'
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
+import { useCartStore } from './stores/cart'
 
-interface RegisterResponse {
-  id: number
-  name: string
-  email: string
-  role: string
+const router = useRouter()
+const route = useRoute()
+const auth = useAuthStore()
+const cartStore = useCartStore()
+
+const isLoggedIn = computed(() => auth.isLoggedIn)
+
+function goHome() {
+  router.push({ name: 'home' })
 }
 
-interface ApiError {
-  message?: string
+function goCart() {
+  router.push({ name: 'cart' })
 }
 
-const backendStatus = ref('CHECKING')
-const submitting = ref(false)
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
-const registeredUser = ref<RegisterResponse | null>(null)
+function logout() {
+  auth.logout()
+  router.push({ name: 'login' })
+}
 
-const form = reactive({
-  name: '',
-  email: '',
-  password: '',
-})
-
-onMounted(async () => {
-  try {
-    await axios.get('http://localhost:8080/api/health')
-    backendStatus.value = 'UP'
-  } catch {
-    backendStatus.value = 'ERROR'
-  }
-})
-
-async function register() {
-  message.value = ''
-  registeredUser.value = null
-  submitting.value = true
-
-  try {
-    const response = await axios.post<RegisterResponse>(
-      'http://localhost:8080/api/users',
-      {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-      },
-    )
-
-    registeredUser.value = response.data
-    message.value = 'ユーザー登録に成功しました！'
-    messageType.value = 'success'
-
-    form.name = ''
-    form.email = ''
-    form.password = ''
-  } catch (error: unknown) {
-    if (axios.isAxiosError<ApiError>(error)) {
-      message.value =
-        error.response?.data?.message ??
-        '登録に失敗しました。バックエンドの状態を確認してください。'
-    } else {
-      message.value = '予期しないエラーが発生しました。'
+// 登录后同步购物车数量，退出登录时清空数量
+watch(
+  () => auth.isLoggedIn,
+  async (loggedIn) => {
+    if (!loggedIn) {
+      cartStore.resetCart()
+      return
     }
 
-    messageType.value = 'error'
-  } finally {
-    submitting.value = false
-  }
-}
+    try {
+      await cartStore.refreshCartCount()
+    } catch {
+      // 获取失败时保留当前数量，后续可以重新同步
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <el-container class="layout">
-    <el-aside width="220px" class="sidebar">
-      <div class="brand">Shin no Delivery</div>
+  <div class="app">
+    <header v-if="isLoggedIn" class="global-header">
+      <div class="header-inner">
+        <div class="logo" @click="goHome">宅配注文管理システム</div>
 
-      <el-menu default-active="register" class="side-menu">
-        <el-menu-item index="dashboard">
-          <el-icon><Odometer /></el-icon>
-          <span>ダッシュボード</span>
-        </el-menu-item>
-
-        <el-menu-item index="register">
-          <el-icon><User /></el-icon>
-          <span>ユーザー登録</span>
-        </el-menu-item>
-      </el-menu>
-    </el-aside>
-
-    <el-container>
-      <el-header class="topbar">
-        <span>宅配注文管理システム</span>
-        <el-tag :type="backendStatus === 'UP' ? 'success' : 'danger'">
-          {{ backendStatus === 'UP' ? 'API 正常稼働中' : 'API 未接続' }}
-        </el-tag>
-      </el-header>
-
-      <el-main class="content">
-        <h1>ユーザー登録</h1>
-        <p class="subtitle">
-          新しいユーザーのアカウントを作成します。
-        </p>
-
-        <el-card class="register-card" shadow="hover">
-          <el-form
-            :model="form"
-            label-position="top"
-            @submit.prevent="register"
+        <nav class="header-nav">
+          <button
+            type="button"
+            :class="{ active: route.name === 'home' || route.name === 'store-products' }"
+            @click="goHome"
           >
-            <el-form-item label="名前">
-              <el-input
-                v-model="form.name"
-                placeholder="山田 太郎"
-                maxlength="100"
-                autocomplete="name"
-                required
-              />
-            </el-form-item>
+            店舗一覧
+          </button>
 
-            <el-form-item label="メールアドレス">
-              <el-input
-                v-model="form.email"
-                placeholder="taro@example.com"
-                type="email"
-                maxlength="255"
-                autocomplete="email"
-                required
-              />
-            </el-form-item>
+          <button type="button" :class="{ active: route.name === 'cart' }" @click="goCart">
+            <span>カート</span>
 
-            <el-form-item label="パスワード">
-              <el-input
-                v-model="form.password"
-                type="password"
-                placeholder="8文字以上"
-                minlength="8"
-                maxlength="72"
-                show-password
-                autocomplete="new-password"
-                required
-              />
-            </el-form-item>
+            <span v-if="cartStore.totalQuantity > 0" class="cart-badge">
+              {{ cartStore.totalQuantity > 99 ? '99+' : cartStore.totalQuantity }}
+            </span>
+          </button>
 
-            <el-button
-              type="primary"
-              native-type="submit"
-              :loading="submitting"
-              :disabled="backendStatus !== 'UP'"
-            >
-              登録する
-            </el-button>
-          </el-form>
+          <button type="button" @click="logout">ログアウト</button>
+        </nav>
+      </div>
+    </header>
 
-          <el-alert
-            v-if="message"
-            :title="message"
-            :type="messageType"
-            show-icon
-            :closable="true"
-            class="result-alert"
-          />
-
-          <div v-if="registeredUser" class="result-details">
-            <p>ユーザー ID：{{ registeredUser.id }}</p>
-            <p>名前：{{ registeredUser.name }}</p>
-            <p>メールアドレス：{{ registeredUser.email }}</p>
-            <p>ロール：{{ registeredUser.role }}</p>
-          </div>
-        </el-card>
-      </el-main>
-    </el-container>
-  </el-container>
+    <RouterView />
+  </div>
 </template>
+
+<style scoped>
+.global-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-nav button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: #444;
+}
+
+.header-nav button:hover {
+  background: #f3f3f3;
+}
+
+.header-nav button.active {
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 600;
+}
+.cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  margin-left: 5px;
+  border-radius: 10px;
+  background: #e53935;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .header-inner {
+    padding: 0 12px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 15px;
+  }
+
+  .header-nav {
+    gap: 2px;
+  }
+
+  .header-nav button {
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+</style>

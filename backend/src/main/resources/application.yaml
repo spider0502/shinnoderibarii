@@ -3,7 +3,7 @@ spring:
     name: shinnoderibarii-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/delivery_order?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
+    url: jdbc:mysql://localhost:3306/delivery_order?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Tokyo
     username: app
     password: app_password
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -13,3 +13,7 @@ mybatis:
 
 server:
   port: 8080
+
+jwt:
+  secret: M9pYxwxYW/0h4l9zT3IJydG+XTDzJBZFrOT2mMxUVu4=
+  expiration: 3600000

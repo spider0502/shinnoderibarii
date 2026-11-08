@@ -1,13 +1,15 @@
 
 package com.shinnoderibarii.service;
 
+import com.shinnoderibarii.dto.LoginRequest;
 import com.shinnoderibarii.dto.UserRegisterRequest;
 import com.shinnoderibarii.entity.User;
+import com.shinnoderibarii.exception.EmailAlreadyExistsException;
+import com.shinnoderibarii.exception.InvalidCredentialsException;
 import com.shinnoderibarii.mapper.UserMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.shinnoderibarii.exception.EmailAlreadyExistsException;
 
 @Service
 public class UserService {
@@ -37,5 +39,21 @@ public class UserService {
         userMapper.insert(user);
 
         return user;
+    }
+
+    public User login(LoginRequest request) {
+        User user = userMapper.findByEmail(request.email());
+
+        if (user == null
+                || !passwordEncoder.matches(
+                        request.password(), user.getPassword())) {
+            throw new InvalidCredentialsException();
+        }
+
+        return user;
+    }
+
+    public User findByEmail(String email) {
+        return userMapper.findByEmail(email);
     }
 }

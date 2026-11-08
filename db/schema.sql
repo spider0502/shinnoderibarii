@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT NOT NULL AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
@@ -8,9 +7,76 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(30) NOT NULL DEFAULT 'CUSTOMER',
     address VARCHAR(255),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT uk_users_email UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS stores (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    address VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    status VARCHAR(30) NOT NULL DEFAULT 'OPEN',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_stores_code UNIQUE (code)
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    store_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_categories_store_name UNIQUE (store_id, name),
+    CONSTRAINT fk_categories_store FOREIGN KEY (store_id) REFERENCES stores(id)
+);
+
+CREATE TABLE IF NOT EXISTS products (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    store_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    image_url VARCHAR(500),
+    status VARCHAR(30) NOT NULL DEFAULT 'ON_SALE',
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_products_store_name UNIQUE (store_id, name),
+    CONSTRAINT fk_products_store FOREIGN KEY (store_id) REFERENCES stores(id),
+    CONSTRAINT fk_products_category FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS carts (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_carts_user UNIQUE (user_id),
+    CONSTRAINT fk_carts_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS cart_items (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    cart_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_cart_items_cart_product UNIQUE (cart_id, product_id),
+    CONSTRAINT fk_cart_items_cart FOREIGN KEY (cart_id) REFERENCES carts(id),
+    CONSTRAINT fk_cart_items_product FOREIGN KEY (product_id) REFERENCES products(id)
 );
