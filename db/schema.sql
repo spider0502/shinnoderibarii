@@ -12,6 +12,21 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT uk_users_email UNIQUE (email)
 );
 
+CREATE TABLE IF NOT EXISTS user_addresses (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    recipient_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    postal_code VARCHAR(10) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_user_addresses_user_id (user_id),
+    CONSTRAINT fk_user_addresses_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE TABLE IF NOT EXISTS stores (
     id BIGINT NOT NULL AUTO_INCREMENT,
     code VARCHAR(50) NOT NULL,

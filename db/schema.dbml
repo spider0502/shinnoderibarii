@@ -46,6 +46,22 @@ Table products {
   deleted_at datetime
 }
 
+Table user_addresses {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  recipient_name varchar(100) [not null]
+  phone varchar(20) [not null]
+  postal_code varchar(10) [not null]
+  address varchar(255) [not null]
+  is_default boolean [not null, default: false]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+
+  Indexes {
+    user_id
+  }
+}
+
 Table carts {
   id bigint [pk, increment]
   user_id bigint [not null, unique]
@@ -83,6 +99,8 @@ Table orders {
   store_id bigint [not null]
   status varchar(30) [not null]
   total_amount decimal(10,2) [not null]
+  delivery_recipient_name varchar(100) [not null]
+  delivery_phone varchar(20) [not null]
   delivery_postal_code varchar(10) [not null]
   delivery_address varchar(255) [not null]
   created_at datetime [not null]
@@ -125,6 +143,7 @@ Table deliveries {
   }
 }
 
+Ref: users.id < user_addresses.user_id
 Ref: users.id - carts.user_id
 Ref: users.id < order_groups.user_id
 Ref: users.id < deliveries.delivery_staff_id
