@@ -18,6 +18,26 @@ DBMS: MySQL 8.4
 | created_at | DATETIME | NO | |
 | updated_at | DATETIME | NO | |
 
+## user_addresses（配送先住所機能実装時）
+
+ユーザーが管理する配送先住所。1人のユーザーが複数件登録できる。
+
+| カラム | 型 | NULL | 制約 |
+|---|---|---|---|
+| id | BIGINT | NO | PK |
+| user_id | BIGINT | NO | FK → users.id |
+| recipient_name | VARCHAR(100) | NO | 受取人氏名 |
+| phone | VARCHAR(20) | NO | 連絡先電話番号 |
+| postal_code | VARCHAR(10) | NO | 郵便番号 |
+| address | VARCHAR(255) | NO | 住所 |
+| is_default | BOOLEAN | NO | デフォルト住所フラグ |
+| created_at | DATETIME | NO | |
+| updated_at | DATETIME | NO | |
+
+インデックス：`user_addresses.user_id`
+
+デフォルト住所はユーザーごとに最大1件とする。住所の登録・変更・削除時にトランザクションを利用し、Service層で一意性を保証する。
+
 ## stores
 
 | カラム | 型 | NULL | 制約 |
@@ -119,8 +139,10 @@ UNIQUE制約：
 | store_id | BIGINT | NO | FK → stores.id |
 | status | VARCHAR(30) | NO | |
 | total_amount | DECIMAL(10,2) | NO | |
-| delivery_postal_code | VARCHAR(10) | NO | |
-| delivery_address | VARCHAR(255) | NO | |
+| delivery_recipient_name | VARCHAR(100) | NO | 受取人氏名のスナップショット |
+| delivery_phone | VARCHAR(20) | NO | 電話番号のスナップショット |
+| delivery_postal_code | VARCHAR(10) | NO | 郵便番号のスナップショット |
+| delivery_address | VARCHAR(255) | NO | 住所のスナップショット |
 | created_at | DATETIME | NO | |
 | updated_at | DATETIME | NO | |
 
@@ -153,6 +175,7 @@ UNIQUE制約：
 | updated_at | DATETIME | NO | |
 
 ## 主なインデックス
+- user_addresses.user_id
 - order_groups.user_id
 - orders.order_group_id
 - orders.store_id
@@ -162,7 +185,12 @@ UNIQUE制約：
 - order_items.order_id
 - deliveries.delivery_staff_id
 
+## 配送先住所と注文の関係
+
+注文作成時に、選択された `user_addresses` の受取人氏名、電話番号、郵便番号、住所を `orders` にコピーする。`orders` は住所テーブルへの外部キーに依存せず、住所の変更・削除後も注文時点の配送先情報を保持する。
+
 ## 実装状況
 - 現在のDBに作成済み：`users`、`stores`、`categories`、`products`、`carts`、`cart_items`
+- 今後の配送先住所機能用の設計：`user_addresses`
 - 今後の注文・配送機能用の設計：`order_groups`、`orders`、`order_items`、`deliveries`
 - 上記の注文・配送テーブルは設計済みであり、現時点で実装済みとは扱わない。

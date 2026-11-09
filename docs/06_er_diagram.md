@@ -8,6 +8,7 @@ dbdiagram.ioにDBMLを貼り付けることでER図を確認できます。
 
 ### 現在DBに作成済み
 - users
+- user_addresses（配送先住所機能実装時）
 - stores
 - categories
 - products
@@ -24,6 +25,7 @@ dbdiagram.ioにDBMLを貼り付けることでER図を確認できます。
 
 ```text
 users 1 --- 1 carts
+users 1 --- N user_addresses
 users 1 --- N order_groups
 order_groups 1 --- N orders
 stores 1 --- N orders
@@ -47,11 +49,14 @@ users 1 --- N deliveries
 ### 休業中店舗の商品
 休業中（`CLOSED`）の商品もカートに追加できる。ただし、注文時の商品選択では選択不可とする。店舗状態はカート画面の表示だけでなく、注文確定APIでも再確認する。
 
+### 配送先住所の管理
+ユーザーは `user_addresses` に複数の配送先を登録できる。注文時に選択した住所の受取人氏名・電話番号・郵便番号・住所を `orders` にスナップショットとして保存する。住所帳の変更・削除によって過去の注文情報が変わらないようにする。
+
 ### OrderGroupとOrderの分離
 1回の注文確定を `OrderGroup`、店舗ごとの注文を `Order` として管理する。複数店舗の商品を一括注文する場合、店舗ごとに `Order` を作成し、同じ `OrderGroup` に紐付ける。
 
 ### 注文履歴の保持
-注文時点の商品名・単価・配送先住所を注文関連テーブルに保存し、マスタ変更によって過去の注文情報が変わらないようにする。
+注文時点の商品名・単価・受取人氏名・電話番号・郵便番号・住所を注文関連テーブルに保存し、マスタ変更によって過去の注文情報が変わらないようにする。
 
 ## 実装状況
-現時点では、ER図に含まれるエンティティのうち `users`、`stores`、`categories`、`products`、`carts`、`cart_items` がDBに作成済み。注文・配送関連テーブルは設計段階であり、今後実装する。
+現時点では、ER図に含まれるエンティティのうち `users`、`stores`、`categories`、`products`、`carts`、`cart_items` がDBに作成済み。`user_addresses` は住所管理機能実装時に追加する設計。注文・配送関連テーブルは設計段階であり、今後実装する。
